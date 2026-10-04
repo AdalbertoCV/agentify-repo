@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">
+  <title id="t">agentify-repo</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.35" r="0.6">
+      <stop offset="0" stop-color="#6366F1" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#6366F1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect width="128" height="128" rx="30" fill="url(#bg)"/>
+  <rect width="128" height="128" rx="30" fill="url(#glow)"/>
+  <rect x="1" y="1" width="126" height="126" rx="29" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- the "A": a commit graph — two branches meeting at one head -->
+  <path d="M34 100 L64 28 L94 100" fill="none" stroke="url(#stroke)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- the crossbar is a check: the repo, verified -->
+  <path d="M46 74 L58 85 L82 61" fill="none" stroke="#34D399" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- commit nodes -->
+  <g fill="#0B1020" stroke-width="5">
+    <circle cx="64" cy="28" r="8" stroke="#A78BFA"/>
+    <circle cx="34" cy="100" r="7.5" stroke="#22D3EE"/>
+    <circle cx="94" cy="100" r="7.5" stroke="#8B5CF6"/>
+  </g>
+
+  <!-- spark: the agent -->
+  <path d="M101 20 Q102.6 27.4 110 29 Q102.6 30.6 101 38 Q99.4 30.6 92 29 Q99.4 27.4 101 20 Z" fill="#FBBF24"/>
+</svg>

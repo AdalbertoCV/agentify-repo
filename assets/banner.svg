@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 330" width="1100" height="330" role="img" aria-labelledby="t d">
+  <title id="t">agentify-repo</title>
+  <desc id="d">Make any repository agent-ready: verified commands, real gotchas, zero guesswork.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.18" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#6366F1" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#6366F1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stroke" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#C7D2FE"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#FFFFFF" fill-opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <rect width="1100" height="330" rx="28" fill="url(#bg)"/>
+  <rect width="1100" height="330" rx="28" fill="url(#dots)"/>
+  <rect width="1100" height="330" rx="28" fill="url(#glow)"/>
+
+  <!-- mark (same geometry as logo.svg, scaled) -->
+  <g transform="translate(80 69) scale(1.5)">
+    <rect width="128" height="128" rx="30" fill="#0B1020" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="2"/>
+    <path d="M34 100 L64 28 L94 100" fill="none" stroke="url(#stroke)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 74 L58 85 L82 61" fill="none" stroke="#34D399" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#0B1020" stroke-width="5">
+      <circle cx="64" cy="28" r="8" stroke="#A78BFA"/>
+      <circle cx="34" cy="100" r="7.5" stroke="#22D3EE"/>
+      <circle cx="94" cy="100" r="7.5" stroke="#8B5CF6"/>
+    </g>
+    <path d="M101 20 Q102.6 27.4 110 29 Q102.6 30.6 101 38 Q99.4 30.6 92 29 Q99.4 27.4 101 20 Z" fill="#FBBF24"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="330" y="150" fill="url(#word)" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-1.5">agentify<tspan fill="#818CF8">-</tspan>repo</text>
+  <text x="333" y="200" fill="#A5B4FC" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="27" font-weight="400">Make any repository agent-ready.</text>
+
+  <!-- the promise, as an AGENTS.md command table would show it -->
+  <g font-family="ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace" font-size="18">
+    <rect x="333" y="226" width="236" height="38" rx="10" fill="#FFFFFF" fill-opacity="0.06" stroke="#34D399" stroke-opacity="0.45"/>
+    <text x="351" y="251" fill="#34D399">✓</text><text x="374" y="251" fill="#E2E8F0">verified commands</text>
+    <rect x="583" y="226" width="196" height="38" rx="10" fill="#FFFFFF" fill-opacity="0.06" stroke="#FBBF24" stroke-opacity="0.45"/>
+    <text x="601" y="251" fill="#FBBF24">!</text><text x="620" y="251" fill="#E2E8F0">real gotchas</text>
+    <rect x="793" y="226" width="226" height="38" rx="10" fill="#FFFFFF" fill-opacity="0.06" stroke="#A78BFA" stroke-opacity="0.45"/>
+    <text x="811" y="251" fill="#A78BFA">∅</text><text x="834" y="251" fill="#E2E8F0">zero guesswork</text>
+  </g>
+</svg>
