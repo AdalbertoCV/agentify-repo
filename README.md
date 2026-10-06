@@ -75,7 +75,7 @@ All scripts are standard-library Python with no dependencies.
 
 The skill is built to run on repos you care about:
 
-- 🔒 **Never copies secret values.** Only env var names go in the doc, even when `.env` is committed. The validator fails the run if a value from a real `.env` shows up in the doc.
+- 🔒 **Never copies secret values.** Only env var names are taken from env files, even when `.env` is committed. Matching values block validation unless an exact non-sensitive coincidence has an explicit, independently supported review. Credential patterns and sensitive key names cannot be exempted.
 - 🧪 **Never runs SQL, migrations, or network-touching scripts against anything but a throwaway local container.**
 - 🐳 **Asks before installing toolchains** or pulling Docker images. Every container, volume and network it creates is named `agentify-*` and removed afterwards. It checks for name and port collisions with what's already running.
 - ✍️ **Never deletes human lines.** Lines that are now wrong get a `<!-- agentify: stale -->` note and are listed in the report.
@@ -158,6 +158,44 @@ python "$skillPath/scripts/check_agents_md.py" 'C:/path/to/project' --agent code
 command status, path, and secret checks still run. The default remains
 `--agent claude` for compatibility with existing invocations. Existing human
 Claude instructions remain input for contradiction review, even in Codex mode.
+
+### Reviewing an env match
+
+The validator reads real env values internally for comparison; it does not print
+them or rewrite the document. All matching keys block by default, including
+application names. Never change correct framework names or versions to silence
+an error. The scanner is an additional safeguard, not proof that a document
+contains no secrets.
+
+For a non-sensitive coincidence confirmed independently in a manifest, code, or
+human documentation, copy the review ID printed by the validator into a scratch
+JSON file. Do not store env values in the file. For example:
+
+```json
+{
+  "<64-character review ID from the current validation>": {
+    "source": "package.json",
+    "reason": "The documented public name is independently present in the manifest."
+  }
+}
+```
+
+```powershell
+python "$skillPath/scripts/check_agents_md.py" 'C:/path/to/project' --agent codex --env-reviews 'C:/scratch/env-reviews.json'
+```
+
+Each review is limited to one document path, line number and content, env file,
+key, and matched value. Moving or changing these makes the review stale. Other
+occurrences remain blocked. A nonempty reason and a source file inside the repo
+are required; the source must contain the matched text (case-insensitive). Env
+files and generated agent docs are not independent evidence. The validator checks
+these conditions, but the reviewer remains responsible for judging sensitivity.
+Credential patterns and sensitive key names cannot be exempted.
+
+Accepted reviews remain visible as warnings. Keep the review file with the run's
+report for reproducibility; it contains identifiers, evidence references, and
+reasons, not env values. If a match cannot be justified, report it as blocked
+instead of altering the documented fact. This workflow is language-independent.
 
 **Preview an unpublished local branch:** the clone commands above download the
 published version, which may not contain these changes yet. To test a local

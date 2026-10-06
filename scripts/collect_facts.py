@@ -546,7 +546,7 @@ def git_tracked(root: Path, names: list) -> list:
 
 
 def env_facts(root: Path, files: list) -> dict:
-    """Env var NAMES only — values are never read or printed."""
+    """Export env NAMES only; read templates/code, not values from real env files."""
     out = {}
     for name in [".env.example", ".env.sample", ".env.template", ".env.dist", "example.env", "env.example"]:
         p = root / name
