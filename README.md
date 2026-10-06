@@ -46,7 +46,7 @@ An `AGENTS.md` like this one, excerpted from a real run on a Spring Boot + Postg
 - `/actuator/health` returns 503 when the SMTP host is unreachable, even with the DB up (verified).
 ```
 
-It also creates a `CLAUDE.md` that just imports it (`@AGENTS.md`), so Claude Code, Codex, Cursor and friends all read **one** source of truth.
+Codex reads `AGENTS.md` directly. For Claude compatibility, the skill also creates a `CLAUDE.md` that just imports it (`@AGENTS.md`). Codex-only runs create no Claude file.
 
 ## How it works
 
@@ -104,6 +104,96 @@ You can also run the collector on its own to see what the agent sees:
 python scripts/collect_facts.py path/to/repo --audit
 ```
 
+### Codex (Windows / PowerShell)
+
+Requires Git and Python 3.11+. Check `git --version` and `python --version` first.
+No Python packages, application dependencies, MCP server, or API key are needed
+to install this skill. `py` may be used only if it resolves to a working interpreter.
+
+**Personal installation (all projects):**
+
+```powershell
+$skillPath = Join-Path $HOME '.agents/skills/agentify-repo'
+if (Test-Path -LiteralPath $skillPath) { throw 'Skill already exists; inspect it before updating.' }
+New-Item -ItemType Directory -Force -Path (Split-Path $skillPath) | Out-Null
+git clone https://github.com/AdalbertoCV/agentify-repo $skillPath
+```
+
+**Project installation (this project only):** run the following from the target
+project root instead of performing the personal installation:
+
+```powershell
+New-Item -ItemType Directory -Force -Path .agents/skills | Out-Null
+git clone https://github.com/AdalbertoCV/agentify-repo .agents/skills/agentify-repo
+```
+
+Keep one installation per scope to avoid duplicate skill names. A project-local
+clone contains its own Git repository; share its files deliberately if the team
+needs them. Installing personally is simpler for individual use.
+
+Codex discovers skills in these locations. If it does not appear, restart Codex.
+Open the target project, then invoke:
+
+```text
+$agentify-repo Prepare this project for Codex only. Show the verification
+results and files changed. Do not create CLAUDE.md.
+```
+
+In Codex CLI/IDE, `/skills` also opens the skill selector. This repository does
+not register a `/agentify repo` slash command. See the official
+[Codex skill documentation](https://learn.chatgpt.com/docs/build-skills).
+
+The skill asks Codex to collect facts, read sources, verify commands, and draft
+the Markdown. `write_block.py` writes that draft; it does not infer or generate
+the content on its own. `check_agents_md.py` validates the result; it does not
+execute the documented commands.
+
+Codex-only validation uses:
+
+```powershell
+python "$skillPath/scripts/check_agents_md.py" 'C:/path/to/project' --agent codex
+```
+
+`--agent codex` skips only the sibling CLAUDE.md checks. All AGENTS.md structure,
+command status, path, and secret checks still run. The default remains
+`--agent claude` for compatibility with existing invocations. Existing human
+Claude instructions remain input for contradiction review, even in Codex mode.
+
+**Preview an unpublished local branch:** the clone commands above download the
+published version, which may not contain these changes yet. To test a local
+checkout, copy its skill files to a separate project instead of overwriting an
+existing personal installation:
+
+```powershell
+$source = 'C:/path/to/agentify-repo' # checkout on the local codex-support branch
+$preview = 'C:/path/to/preview-project'
+$destination = Join-Path $preview '.agents/skills/agentify-repo'
+if (Test-Path -LiteralPath $destination) { throw 'Preview skill already exists.' }
+New-Item -ItemType Directory -Force -Path $destination | Out-Null
+Copy-Item -LiteralPath "$source/SKILL.md" -Destination $destination
+foreach ($folder in 'scripts', 'references') {
+    Copy-Item -LiteralPath (Join-Path $source $folder) -Destination $destination -Recurse
+}
+```
+
+Open that preview project in Codex. If the personal skill of the same name is
+already installed, explicitly select the project-local skill by its path. This
+preview does not change the personal installation or the original application.
+
+### Local QA
+
+From this repository root:
+
+```powershell
+python -m unittest discover -s tests -v
+git diff --check
+```
+
+The dependency-free tests exercise the validator CLI with temporary repos:
+Codex warning suppression, unchanged files, legacy Claude behavior, explicit doc
+paths, invalid agent values, missing docs, and preserved structure/secret errors.
+They do not require Docker, services, or a live coding-agent session.
+
 ## Current scope
 
 > [!NOTE]
@@ -125,7 +215,7 @@ python scripts/collect_facts.py path/to/repo --audit
 - Large real-world monorepos (Nx, Turborepo with dozens of packages) are untested.
 - Merging into an existing, human-written `AGENTS.md`/`CLAUDE.md` has only been tested on a synthetic repo.
 - Only tested on Windows with Claude Code. Linux, macOS and other agents should work but are unverified.
-- The scripts have no test suite of their own yet, and the docker-compose reader is a lightweight parser, not a full YAML parser.
+- The validator has focused CLI regression tests; the collector and writer still lack a dedicated test suite. The docker-compose reader is a lightweight parser, not a full YAML parser.
 - Repos that need private registries or real secrets to build will produce `not verified` rows. That is by design, but untested.
 
 ## Roadmap

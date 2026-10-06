@@ -3,6 +3,7 @@
 
 Usage:
     python check_agents_md.py REPO_ROOT [DOC ...]   # default DOC: every AGENTS.md under REPO_ROOT
+    python check_agents_md.py REPO_ROOT --agent codex  # AGENTS.md only; no CLAUDE.md checks
 
 Exit 0 = no errors (warnings may remain), 1 = errors. Secret values are never printed, only key names.
 """
@@ -150,6 +151,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("root")
     parser.add_argument("docs", nargs="*")
+    parser.add_argument("--agent", choices=("claude", "codex"), default="claude",
+                        help="target agent (default: claude, preserving CLAUDE.md checks)")
     args = parser.parse_args()
     root = Path(args.root).resolve()
     docs = [Path(d).resolve() for d in args.docs] or sorted(
@@ -165,11 +168,12 @@ def main() -> int:
     failed = False
     for doc in docs:
         rep = check(root, doc)
-        claude = doc.parent / "CLAUDE.md"
-        if not claude.exists():
-            rep.warn("no sibling CLAUDE.md (create one containing @AGENTS.md)")
-        elif "@AGENTS.md" not in claude.read_text(encoding="utf-8", errors="replace"):
-            rep.warn("sibling CLAUDE.md does not import @AGENTS.md; check for contradictions")
+        if args.agent == "claude":
+            claude = doc.parent / "CLAUDE.md"
+            if not claude.exists():
+                rep.warn("no sibling CLAUDE.md (create one containing @AGENTS.md)")
+            elif "@AGENTS.md" not in claude.read_text(encoding="utf-8", errors="replace"):
+                rep.warn("sibling CLAUDE.md does not import @AGENTS.md; check for contradictions")
         status = "FAIL" if rep.errors else "PASS"
         failed |= bool(rep.errors)
         print(f"[{status}] {rep.doc}: {len(rep.errors)} error(s), {len(rep.warnings)} warning(s)")

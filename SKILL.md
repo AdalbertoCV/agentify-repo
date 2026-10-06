@@ -13,6 +13,8 @@ An AGENTS.md is worth only what an agent **cannot cheaply discover by itself**: 
 
 Scripts live in `<skill-dir>/scripts/`. Run them with `python`, or with `py` on Windows when `python` is a Store alias. All of them are stdlib-only and accept `--help`.
 
+In Codex, invoke this skill with `$agentify-repo` or select it with `/skills`. Use the Codex workflow below when running in Codex or when the user requests Codex-only output; otherwise preserve the existing Claude-compatible workflow. If the target is unclear, ask which agent the docs should support.
+
 ## Procedure
 
 1. **Collect facts.** Run `collect_facts.py <repo> --audit > facts.json`. It reads the repo but never writes to it. Read the JSON first.
@@ -30,10 +32,10 @@ Scripts live in `<skill-dir>/scripts/`. Run them with `python`, or with `py` on 
 5. **Write the doc.** Follow `references/output-contract.md` for sections, tagging, monorepos and examples. Draft the block in a scratch file, then run:
    ```bash
    write_block.py <repo>/AGENTS.md <draft.md>      # inserts/replaces only the marked block
-   write_block.py <repo>/CLAUDE.md --import AGENTS.md
    ```
+   In Codex, create only `AGENTS.md`. For Claude Code or explicitly requested Claude compatibility, also run `write_block.py <repo>/CLAUDE.md --import AGENTS.md`.
    Don't hand-edit the markers. `write_block.py` refuses malformed ones and never alters human text.
-6. **Validate.** Run `check_agents_md.py <repo>`. Fix every ERROR. Fix or consciously accept each warning: a path the text says is missing is fine, filler is not.
+6. **Validate.** In Codex, run `check_agents_md.py <repo> --agent codex`. For Claude compatibility, run `check_agents_md.py <repo>` (the default preserves CLAUDE.md checks). Fix every ERROR. Fix or consciously accept each warning: a path the text says is missing is fine, filler is not.
 7. **Final report** to the user, in chat. Include:
    - the files you changed
    - the command status table
@@ -65,6 +67,6 @@ Use audit mode only when the user asks to **check, audit, or review** docs rathe
 - commands that now fail
 - CI commands that are absent from the doc
 - `empty_or_stub_files`
-- the output of `check_agents_md.py`
+- the output of `check_agents_md.py` (with `--agent codex` for Codex)
 
 Stop after the report. Edit only when the user says so.
