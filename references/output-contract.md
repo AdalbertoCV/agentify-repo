@@ -28,13 +28,14 @@ Budget: ≤150 lines per file. When over budget, cut first whatever is visible i
 ## Monorepos (`monorepo_signals` is non-empty)
 
 - The root AGENTS.md holds repo-wide rules.
-- Create `<package>/AGENTS.md` (plus a sibling `CLAUDE.md` containing `@AGENTS.md`) when the package has its own toolchain or commands that the root commands don't run. Otherwise keep everything in the root file.
+- Create `<package>/AGENTS.md` when the package has its own toolchain or commands that the root commands don't run. Add a sibling `CLAUDE.md` containing `@AGENTS.md` only for Claude compatibility. Otherwise keep everything in the root file.
 - A package file follows the same contract and holds that package's commands and failures. The root file links to it.
 
 ## Other agent files
 
 - Treat `CLAUDE.md`, `.cursorrules`, `.cursor/rules/`, `.github/copilot-instructions.md`, and `GEMINI.md` that contain human content as input. Don't overwrite them. Report contradictions with AGENTS.md in the final report.
-- A missing `CLAUDE.md` is created as `@AGENTS.md` only (`write_block.py --import`).
+- Codex reads `AGENTS.md` directly. Do not create `CLAUDE.md` for Codex-only output; validate with `check_agents_md.py <repo> --agent codex`. Existing Claude docs are still input for contradiction review.
+- For Claude compatibility, a missing `CLAUDE.md` is created as `@AGENTS.md` only (`write_block.py --import`).
 
 ## Skeleton
 
