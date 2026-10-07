@@ -27,6 +27,7 @@ In Codex, invoke this skill with `$agentify-repo` or select it with `/skills`. U
    4. lint and test configs
    5. app config (`app_configs`)
    6. 2–3 representative modules plus one test
+   Treat collector stack labels as an inventory, not the final project description. For every language, distinguish the language/runtime, framework, and tools; attach each version to its component and source. Manifests declare requirements, lockfiles record resolved dependencies, and the available runtime or package metadata can establish installed versions. Do not infer one category from another or use env values as evidence for stack identification.
 3. **Verify the commands.** **REQUIRED:** follow `references/verification.md`. It covers the status vocabulary, missing toolchains, services, risky scripts, and hung processes.
 4. **Ask** the user at most 3 questions about what can't be inferred: off-limits areas, decisions an agent would likely undo, and review expectations. With no user available, leave out those parts. Don't invent them.
 5. **Write the doc.** Follow `references/output-contract.md` for sections, tagging, monorepos and examples. Draft the block in a scratch file, then run:
@@ -36,6 +37,7 @@ In Codex, invoke this skill with `$agentify-repo` or select it with `/skills`. U
    In Codex, create only `AGENTS.md`. For Claude Code or explicitly requested Claude compatibility, also run `write_block.py <repo>/CLAUDE.md --import AGENTS.md`.
    Don't hand-edit the markers. `write_block.py` refuses malformed ones and never alters human text.
 6. **Validate.** In Codex, run `check_agents_md.py <repo> --agent codex`. For Claude compatibility, run `check_agents_md.py <repo>` (the default preserves CLAUDE.md checks). Fix every ERROR. Fix or consciously accept each warning: a path the text says is missing is fine, filler is not.
+   Never rename a framework, change a version, or remove a sourced fact just to pass validation. The validator reads env values internally for comparison; a match is a leak candidate, not evidence that a sourced fact is incorrect. No env key is automatically safe. For a confirmed non-sensitive false positive, record its printed review ID in a scratch JSON file with an independent repository `source` and a meaningful `reason`, then rerun with `--env-reviews <file>` (see README). Do not use env files or generated agent docs as evidence. Reviews apply only to the exact document location, line content, env file, key, and value; changes require renewed review. Credential patterns and sensitive key names cannot be exempted. Report accepted reviews without printing env values, and preserve the review file for reproducibility. For an unresolved error, report the block instead of distorting the fact. Before delivery, check that every version names its component and source.
 7. **Final report** to the user, in chat. Include:
    - the files you changed
    - the command status table
