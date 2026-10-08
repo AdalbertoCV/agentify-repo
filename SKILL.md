@@ -1,6 +1,6 @@
 ---
 name: agentify-repo
-description: Use when asked to prepare, onboard, or "agentify" a repository for AI coding agents; to create, update, regenerate, or audit AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, or copilot-instructions; or when agent instruction files are missing, stale, bloated, or contradict each other or the code.
+description: Use when asked to prepare, onboard, or "agentify" a repository for AI coding agents; to create, update, regenerate, or audit AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, or copilot-instructions; when agent instruction files are missing, stale, bloated, or contradict each other or the code; or when asked (or passed `--brain`) to set up a context brain, a docs/agents documentation structure, or routers that save agent context.
 ---
 
 # Agentify Repo
@@ -60,6 +60,25 @@ In Codex, invoke this skill with `$agentify-repo` or select it with `/skills`. U
 | Delete or rewrite human-written lines | Mark them with `<!-- agentify: stale — <reason> -->` |
 | Fix the repo while documenting it | Record the problem under Gotchas |
 | Leave files that verification modified (lockfiles, builds) | `git checkout -- <file>`, delete the build output, and report it |
+
+## Brain mode (`--brain`)
+
+Use brain mode when the user passes `--brain`, or asks for a context brain, a documentation structure, or routers that save agent context. This is a **mini scan**: it does not verify commands unless the user also asks for the full workflow. **REQUIRED:** follow `references/brain.md`.
+
+1. Run `collect_facts.py <repo> --audit --brain > facts.json`. Read `brain_candidates`, `ci`, `docs` and `adr_dirs`.
+2. Read CI, the README, existing agent docs and ADRs, and one entry module per candidate domain. Stop there.
+3. **Propose** the structure in chat, using the format in `references/brain.md`: files, the paths each one covers, sourced seeds, pending questions, and existing files that will be skipped. Wait for approval or edits. Approval the user gave in advance for this run counts. With no user and no advance approval, stop after the proposal and write nothing.
+4. Write the approved plan to a scratch JSON and run `scaffold_brain.py <repo> <plan.json>`. It creates only missing files and prints a `context_map` table. Any file it skips is human-owned: report it and do not edit it. The one exception is an existing `INDEX.md`: list in the proposal the rows you will append for new files, and append only those rows after approval.
+5. Seed the created files with sourced facts only. Turn generic pending questions into specific ones.
+6. Write the `AGENTS.md` block with `write_block.py`. It needs `## Commands` (status `not verified (brain mode: mini scan)` for anything you did not run) and `## Context map` (the printed table). Other contract sections hold repo-wide facts only. A fact about one domain lives in that domain's file and nowhere else. For Claude compatibility, also create `CLAUDE.md` with `--import AGENTS.md`.
+7. Run `check_agents_md.py <repo> --brain` (add `--agent codex` for Codex). Fix every ERROR. Pending-item warnings are expected.
+8. Final report. Include:
+   - the files created and skipped
+   - the Context map
+   - the command status table
+   - contradictions with existing agent docs
+   - the pending questions, grouped by file
+   - the next step: run the full workflow to verify commands
 
 ## Audit mode
 
