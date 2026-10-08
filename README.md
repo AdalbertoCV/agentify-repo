@@ -67,9 +67,37 @@ flowchart LR
 | [`references/output-contract.md`](references/output-contract.md) | Section order, useful-vs-noise examples, monorepos |
 | [`scripts/collect_facts.py`](scripts/collect_facts.py) | Read-only scan, output as JSON: stacks, CI commands, containers, env var **names**, risky scripts, raw SQL, external hosts in config, installed toolchain, candidate commands |
 | [`scripts/write_block.py`](scripts/write_block.py) | Inserts or replaces only the `<!-- agentify:start/end -->` block. Never touches human-written text |
-| [`scripts/check_agents_md.py`](scripts/check_agents_md.py) | Validates the result: markers, section order, every command has a status, paths exist, **no leaked secrets**, no filler |
+| [`scripts/check_agents_md.py`](scripts/check_agents_md.py) | Validates the result: markers, section order, every command has a status, paths exist, **no leaked secrets**, no filler. With `--brain`, also checks the `docs/agents/` brain |
+| [`references/brain.md`](references/brain.md) | Brain mode: structure, domain choice, seeding rules, context-saving rules |
+| [`scripts/scaffold_brain.py`](scripts/scaffold_brain.py) | Creates the approved `docs/agents/` skeleton. Never overwrites an existing file. Prints the Context map table for `AGENTS.md` |
 
 All scripts are standard-library Python with no dependencies.
+
+## Brain mode (`--brain`)
+
+A single `AGENTS.md` can only hold so much. Brain mode does a **mini scan** of the repo the first time and leaves a documentation structure that the next agent session can navigate and fill in, loading only what the task needs:
+
+```
+AGENTS.md              ← commands + Context map: "if you touch X, read Y"
+docs/agents/
+  INDEX.md             ← one row per file: file | read when
+  architecture.md · glossary.md · MAINTENANCE.md
+  domains/<area>.md    ← one per area of the code, with `read_when` + `paths` frontmatter
+  decisions/ · runbooks/
+```
+
+> *"agentify this repo --brain"* · *"set up a context brain for agents in this repo"*
+
+The agent proposes the structure in chat first and writes only after you approve. Each file is seeded only with sourced facts. Everything else stays as a concrete `<!-- agentify:pending — question -->` for the next session to answer. Existing files are never overwritten. `check_agents_md.py --brain` keeps the brain usable over time:
+
+- every link resolves
+- every file is reachable from `INDEX.md`
+- every file stays within 80 lines
+- frontmatter `paths` still exist, so a file goes stale visibly when its code moves
+- no secrets
+- pending items are counted as warnings
+
+Commands stay `not verified` in brain mode. Run the normal workflow afterwards to verify them.
 
 ## Safety by design
 
@@ -230,7 +258,10 @@ git diff --check
 The dependency-free tests exercise the validator CLI with temporary repos:
 Codex warning suppression, unchanged files, legacy Claude behavior, explicit doc
 paths, invalid agent values, missing docs, and preserved structure/secret errors.
-They do not require Docker, services, or a live coding-agent session.
+`tests/test_brain.py` covers brain mode: collector domain candidates, the
+scaffolder (no overwrites, all-or-nothing plan validation, dry run) and the
+`--brain` checks (Context map, links, orphans, frontmatter, budget, stale paths,
+secrets). They do not require Docker, services, or a live coding-agent session.
 
 ## Current scope
 
@@ -253,7 +284,7 @@ They do not require Docker, services, or a live coding-agent session.
 - Large real-world monorepos (Nx, Turborepo with dozens of packages) are untested.
 - Merging into an existing, human-written `AGENTS.md`/`CLAUDE.md` has only been tested on a synthetic repo.
 - Only tested on Windows with Claude Code. Linux, macOS and other agents should work but are unverified.
-- The validator has focused CLI regression tests; the collector and writer still lack a dedicated test suite. The docker-compose reader is a lightweight parser, not a full YAML parser.
+- The validator and brain mode have focused CLI regression tests; the collector (beyond `--brain`) and writer still lack a dedicated test suite. The docker-compose reader is a lightweight parser, not a full YAML parser.
 - Repos that need private registries or real secrets to build will produce `not verified` rows. That is by design, but untested.
 
 ## Roadmap
@@ -263,6 +294,7 @@ They do not require Docker, services, or a live coding-agent session.
 - [ ] Real-world validation on Go, Rust, Gradle and a large Nx/Turborepo monorepo
 - [ ] End-to-end runs on Linux and macOS, and with other agents (Codex, Cursor, opencode)
 - [ ] Hardened merge for existing human-written agent docs
+- [x] `--brain` mode: a routed `docs/agents/` context brain, scaffolded from a mini scan
 - [ ] `--refresh` mode: re-verify an existing `AGENTS.md` and report drift (e.g. on a schedule)
 
 Have a repo where it gets something wrong? [Open an issue](https://github.com/AdalbertoCV/agentify-repo/issues). A short description of the stack and the bad line is the most useful bug report there is.

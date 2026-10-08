@@ -6,12 +6,13 @@ Omit a section that would be empty. `check_agents_md.py` enforces the order. **C
 
 1. **Project** — 1–2 sentences: what it is and its main stack.
 2. **Commands** — table: `Task | Command | Status`. Statuses come from `verification.md`. Include the table even when nothing could be run; it is still the best map. If tests need services, put the service setup here.
-3. **Layout** — only non-obvious locations ("API routes are in `server/handlers`, not `routes/`"). Not a tree.
-4. **Conventions** — rules that linters and formatters **don't** enforce. Give each one a source tag or a file reference.
-5. **Boundaries** — what not to touch, or to ask about first: generated code, migrations, raw SQL, vendored code, public APIs, scripts that hit real systems.
-6. **Gotchas & known issues** — failing commands, `empty_or_stub_files`, required env vars (names only), version constraints, ordering traps, side-effecting scripts.
-7. **Decisions** — "we do X because Y", each with its source, linking to ADRs or docs if they exist.
-8. **Done means** — the checks to run before declaring a task complete. Mirror CI. If CI skips part of the repo or is broken, say so. Without CI, list the local commands you verified.
+3. **Context map** — only in brain mode (`references/brain.md`): table `If you touch | Read first`, linking to `docs/agents/`. The last row is `Anything else | docs/agents/INDEX.md`. `check_agents_md.py --brain` requires it in the root file.
+4. **Layout** — only non-obvious locations ("API routes are in `server/handlers`, not `routes/`"). Not a tree.
+5. **Conventions** — rules that linters and formatters **don't** enforce. Give each one a source tag or a file reference.
+6. **Boundaries** — what not to touch, or to ask about first: generated code, migrations, raw SQL, vendored code, public APIs, scripts that hit real systems.
+7. **Gotchas & known issues** — failing commands, `empty_or_stub_files`, required env vars (names only), version constraints, ordering traps, side-effecting scripts.
+8. **Decisions** — "we do X because Y", each with its source, linking to ADRs or docs if they exist.
+9. **Done means** — the checks to run before declaring a task complete. Mirror CI. If CI skips part of the repo or is broken, say so. Without CI, list the local commands you verified.
 
 Budget: ≤150 lines per file. When over budget, cut first whatever is visible in the code.
 
