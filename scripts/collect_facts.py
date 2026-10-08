@@ -664,8 +664,13 @@ def brain_candidates(root: Path, files: list) -> dict:
         for i in range(1, len(parts) + 1):
             total["/".join(parts[:i])] = total.get("/".join(parts[:i]), 0) + 1
 
+    kids = {}
+    for c in total:
+        if "/" in c:
+            kids.setdefault(c.rsplit("/", 1)[0], []).append(c)
+
     def children(d):
-        return sorted(c for c in total if c.startswith(d + "/") and c.count("/") == d.count("/") + 1)
+        return sorted(kids.get(d, []))
 
     domains = []
     for top in (d for d in total if "/" not in d):

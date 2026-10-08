@@ -93,9 +93,9 @@ def load_env_reviews(path: Path, root: Path) -> dict:
             raise ValueError("invalid review entry")
         source = (root / review["source"]).resolve()
         if (not source.is_relative_to(root) or not source.is_file()
-                or source.name.startswith(".env")
+                or source.name.startswith(".env") or source.is_relative_to((root / BRAIN_DIR).resolve())
                 or source.name in {"AGENTS.md", "CLAUDE.md", "GEMINI.md"}):
-            raise ValueError("source must be a repository file other than an env file")
+            raise ValueError("source must be a repository file other than an env file or agent doc")
     return reviews
 
 
@@ -235,11 +235,12 @@ def check_brain(root: Path, env_reviews=None) -> list:
         r.err(f"no {BRAIN_DIR}/INDEX.md; create the brain with scaffold_brain.py first")
         return [r]
     files = sorted(p.resolve() for p in brain.rglob("*.md"))
+    file_set = set(files)
     reachable, queue = {index}, [index]
     while queue:
         current = queue.pop()
         for _, target in link_targets(current, current.read_text(encoding="utf-8", errors="replace")):
-            if target in files and target not in reachable:
+            if target in file_set and target not in reachable:
                 reachable.add(target)
                 queue.append(target)
     env_values = env_secret_values(root)
@@ -247,7 +248,7 @@ def check_brain(root: Path, env_reviews=None) -> list:
     for f in files:
         rel = f.relative_to(brain.resolve()).as_posix()
         r = Report(f"{BRAIN_DIR}/{rel}")
-        text = f.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        text = f.read_text(encoding="utf-8-sig", errors="replace").replace("\r\n", "\n")
         if len(text.splitlines()) > BRAIN_MAX_LINES:
             r.err(f"length: {len(text.splitlines())} lines > {BRAIN_MAX_LINES}; split by topic and link")
         fm = FRONTMATTER_RE.match(text)

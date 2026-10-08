@@ -95,14 +95,15 @@ def validate(root: Path, plan) -> list:
             raise ValueError(f"domain slug {slug!r} must be unique kebab-case")
         seen.add(slug)
         for field, value in (("title", title), ("read_when", read_when)):
-            if not isinstance(value, str) or not value.strip() or "\n" in value:
-                raise ValueError(f"domain {slug}: {field} must be one non-empty line")
+            if not isinstance(value, str) or not value.strip() or "\n" in value or "|" in value:
+                raise ValueError(f"domain {slug}: {field} must be one non-empty line without '|'")
         if not isinstance(paths, list) or not paths:
             raise ValueError(f"domain {slug}: paths must be a non-empty list")
         for p in paths:
             target = (root / str(p)).resolve()
-            if not isinstance(p, str) or Path(p).is_absolute() or not target.is_relative_to(root) or not target.exists():
-                raise ValueError(f"domain {slug}: path {p!r} must exist inside the repository")
+            if (not isinstance(p, str) or not p.strip() or Path(p).is_absolute() or any(c in p for c in ",[]|`")
+                    or not target.is_relative_to(root) or target == root or not target.exists()):
+                raise ValueError(f"domain {slug}: path {p!r} must exist inside the repository and not contain , [ ] | or backticks")
     return plan.get("domains", [])
 
 

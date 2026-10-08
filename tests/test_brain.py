@@ -98,6 +98,9 @@ class ScaffoldTests(BrainTestCase):
             {"domains": [{"slug": "x", "title": "X", "paths": ["src/missing/"], "read_when": "always"}]},
             {"domains": [{"slug": "x", "title": "X", "paths": ["src/"], "read_when": " "}]},
             {"domains": [{"slug": "x", "title": "X", "paths": ["src/"], "read_when": "a"}] * 2},
+            {"domains": [{"slug": "x", "title": "X", "paths": ["src/"], "read_when": "invoices | refunds"}]},
+            {"domains": [{"slug": "x", "title": "X", "paths": ["."], "read_when": "always"}]},
+            {"domains": [{"slug": "x", "title": "X", "paths": ["src/a,b"], "read_when": "always"}]},
         )
         for plan in bad_plans:
             with self.subTest(plan=plan):
@@ -149,6 +152,13 @@ class ValidatorTests(BrainTestCase):
                 self.assertIn(needle, result.stdout)
                 for p in sorted(self.brain.rglob("*"), reverse=True):
                     p.unlink() if p.is_file() else p.rmdir()
+
+    def test_bom_before_frontmatter_is_accepted(self):
+        self.write_agents_md()
+        glossary = self.brain / "glossary.md"
+        glossary.write_text("﻿" + glossary.read_text(encoding="utf-8"), encoding="utf-8")
+        result = self.check()
+        self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_stale_frontmatter_path_warns(self):
         self.write_agents_md()
