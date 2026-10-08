@@ -2,7 +2,7 @@
 """Collect verifiable facts about a repository as JSON, for an agent to synthesize AGENTS.md.
 
 Usage:
-    python collect_facts.py [ROOT] [--audit] [--max-depth N]
+    python collect_facts.py [ROOT] [--audit] [--brain] [--max-depth N]
 
 Stdlib only. Never writes to the repository. Reads file contents only for
 config/manifests; never prints .env values (only key names from *.example files).
@@ -643,7 +643,50 @@ def audit_agent_docs(root: Path, docs: list) -> list:
     return findings
 
 
-def collect(root: Path, max_depth: int, audit: bool) -> dict:
+BRAIN_DIR = "docs/agents"
+DOMAIN_CONTAINERS = {"src", "app", "apps", "lib", "libs", "packages", "services", "modules", "internal", "pkg", "cmd"}
+NON_DOMAIN_DIRS = {"test", "tests", "__tests__", "spec", "specs", "e2e", "fixtures", "docs", "doc",
+                   "examples", "assets", "migrations"}
+SOURCE_EXTS = {".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".vue", ".svelte", ".go", ".rs",
+               ".java", ".kt", ".kts", ".scala", ".rb", ".php", ".cs", ".fs", ".swift", ".c", ".h",
+               ".cpp", ".hpp", ".ex", ".exs", ".erl", ".clj", ".dart", ".lua"}
+
+
+def brain_candidates(root: Path, files: list) -> dict:
+    """Candidate domains for a docs/agents brain: where source code branches into areas."""
+    total, direct = {}, {}
+    for f in files:
+        parts = f.relative_to(root).parts[:-1]
+        if (f.suffix.lower() not in SOURCE_EXTS or TEST_FILE_RE.match(f.name) or not parts
+                or {p.lower() for p in parts} & NON_DOMAIN_DIRS):
+            continue
+        direct["/".join(parts)] = direct.get("/".join(parts), 0) + 1
+        for i in range(1, len(parts) + 1):
+            total["/".join(parts[:i])] = total.get("/".join(parts[:i]), 0) + 1
+
+    def children(d):
+        return sorted(c for c in total if c.startswith(d + "/") and c.count("/") == d.count("/") + 1)
+
+    domains = []
+    for top in (d for d in total if "/" not in d):
+        if top.lower() not in DOMAIN_CONTAINERS:
+            domains.append(top)
+            continue
+        d = top
+        while not direct.get(d) and len(children(d)) == 1:  # collapse src/main/java/com/acme chains
+            d = children(d)[0]
+        domains.extend(children(d) if len(children(d)) >= 2 else [d])
+    brain = root / BRAIN_DIR
+    return {
+        "brain_dir": BRAIN_DIR,
+        "brain_dir_exists": brain.is_dir(),
+        "existing_brain_files": sorted(rel(root, f) for f in brain.rglob("*.md")) if brain.is_dir() else [],
+        "domains": sorted(({"path": d, "source_files": total[d]} for d in domains),
+                          key=lambda x: (-x["source_files"], x["path"]))[:25],
+    }
+
+
+def collect(root: Path, max_depth: int, audit: bool, brain: bool = False) -> dict:
     files = list(walk(root, max_depth))
     by_name = {}
     for f in files:
@@ -755,6 +798,8 @@ def collect(root: Path, max_depth: int, audit: bool) -> dict:
     }
     if audit:
         result["audit"] = audit_agent_docs(root, [d for d in unique_docs if "lines" in d])
+    if brain:
+        result["brain_candidates"] = brain_candidates(root, files)
     return result
 
 
@@ -762,6 +807,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("root", nargs="?", default=".", help="repository root (default: .)")
     parser.add_argument("--audit", action="store_true", help="check paths referenced by existing agent docs")
+    parser.add_argument("--brain", action="store_true", help="add candidate domains for a docs/agents brain")
     parser.add_argument("--max-depth", type=int, default=12,
                         help="directory depth to scan (default: 12; Java packages nest deeply)")
     args = parser.parse_args()
@@ -774,7 +820,7 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except AttributeError:
         pass
-    json.dump(collect(root, args.max_depth, args.audit), sys.stdout, indent=2, ensure_ascii=False)
+    json.dump(collect(root, args.max_depth, args.audit, args.brain), sys.stdout, indent=2, ensure_ascii=False)
     print()
     return 0
 
